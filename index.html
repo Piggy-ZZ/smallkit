@@ -1,186 +1,181 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可愛風訪客統計</title> 
-
+    <title>可愛風訪客統計</title>
     <style>
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
             background-color: #ffe4e1;
             text-align: center;
         }
-        h1 { color: #ff69b4; }
-        h2 { color: #ff69b4; margin-top: 20px; }
-        button { padding: 15px 30px; font-size: 16px; margin: 10px; border-radius: 20px; background-color: #ffb6c1; color: white; cursor: pointer; transition: background-color 0.3s ease; }
-        button:hover { background-color: #ff69b4; }
-        #result, #latestData { margin-top: 20px; font-size: 20px; color: #ff69b4; }
-        .counter { padding: 10px; background-color: #fff0f5; border-radius: 10px; margin: 5px; }
-        #export, #clear { margin-top: 20px; padding: 10px 20px; background-color: #ffa07a; color: white; border-radius: 15px; cursor: pointer; }
-        #loginSection { margin-top: 50px; }
-        #mainContent { display: none; }
+        h1 {
+            color: #ff69b4;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            margin: 10px;
+            border: none;
+            border-radius: 20px;
+            background-color: #ffb6c1;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #ff69b4;
+        }
+        #result, #recentData {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #ff69b4;
+        }
+        .counter, .recentEntry {
+            padding: 10px;
+            background-color: #fff0f5;
+            border-radius: 10px;
+            margin: 5px;
+        }
+        #export {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ffa07a;
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+        #loginContainer {
+            display: none;
+            text-align: center;
+            margin-top: 20%;
+        }
+        #appContainer {
+            display: none;
+        }
     </style>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+        import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            databaseURL: "YOUR_DATABASE_URL"
+            authDomain: "people-counting-1cae9.firebaseapp.com",
+            projectId: "people-counting-1cae9",
+            storageBucket: "people-counting-1cae9.appspot.com",
+            messagingSenderId: "521847124489",
+            appId: "1:521847124489:web:bd17765a151b60ccd97ed8",
+            databaseURL: "https://people-counting-1cae9-default-rtdb.firebaseio.com"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        let currentUserName = '';
 
-        // 實時監聽數據變化並更新顯示
-        onValue(ref(db, 'counts'), (snapshot) => {
-            const data = snapshot.val();
-            document.getElementById('countA').textContent = data.guestA.count || 0;
-            document.getElementById('countB').textContent = data.guestB.count || 0;
-            document.getElementById('countC').textContent = data.guestC.count || 0;
-            document.getElementById('countD').textContent = data.guestD.count || 0;
-            document.getElementById('countE').textContent = data.guestE.count || 0;
-            document.getElementById('countF').textContent = data.guestF.count || 0;
-            document.getElementById('countG').textContent = data.guestG.count || 0;
-        });
+        // 登錄功能
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-        // 增加計數，並記錄訪客名稱和時間
+            if (password === "123456") {  // 假設預設密碼是 "123456"
+                currentUserName = username;
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+            } else {
+                alert("密碼錯誤");
+            }
+        }
+
+        // 增加計數功能
         window.increment = function (type) {
-            const visitorName = document.getElementById("visitorName").value || "未知訪客";
-            const timestamp = new Date().toLocaleString();
             const countRef = ref(db, 'counts/' + type);
             get(countRef).then((snapshot) => {
-                let count = snapshot.val().count || 0;
+                let count = snapshot.val() || 0;
                 count++;
-                set(countRef, { count: count, visitorName: visitorName, timestamp: timestamp });
+                const timestamp = new Date().toLocaleString();
+                const entry = { count, user: currentUserName, time: timestamp };
+                set(ref(db, `counts/${type}`), count);
+                const newEntryRef = ref(db, `recent/${Date.now()}`);
+                set(newEntryRef, { type, count, user: currentUserName, time: timestamp });
             });
         };
 
-        // 匯出統計資料為 Excel
+        // 匯出 Excel
         window.exportData = function () {
             get(ref(db, 'counts')).then((snapshot) => {
                 const counts = snapshot.val();
-                let data = [
-                    ["訪客類型", "人數", "訪客名稱", "時間"]
+                const data = [
+                    ["訪客類型", "人數"],
+                    ["A", counts.guestA || 0],
+                    ["B", counts.guestB || 0],
+                    ["C", counts.guestC || 0],
+                    ["D", counts.guestD || 0],
+                    ["E", counts.guestE || 0],
+                    ["F", counts.guestF || 0],
+                    ["G", counts.guestG || 0]
                 ];
-
-                for (let type in counts) {
-                    if (counts.hasOwnProperty(type)) {
-                        const entry = counts[type];
-                        data.push([type, entry.count || 0, entry.visitorName || "未知", entry.timestamp || "無"]);
-                    }
-                }
-
-                let ws = XLSX.utils.aoa_to_sheet(data);
-                let wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "訪客統計");
-
-                XLSX.writeFile(wb, "visitor_count_with_names.xlsx");
+                XLSX.writeFile(wb, "訪客統計.xlsx");
             });
         };
 
         // 清空數據
         window.clearData = function () {
-            set(ref(db, 'counts'), {
-                guestA: { count: 0, visitorName: '', timestamp: '' },
-                guestB: { count: 0, visitorName: '', timestamp: '' },
-                guestC: { count: 0, visitorName: '', timestamp: '' },
-                guestD: { count: 0, visitorName: '', timestamp: '' },
-                guestE: { count: 0, visitorName: '', timestamp: '' },
-                guestF: { count: 0, visitorName: '', timestamp: '' },
-                guestG: { count: 0, visitorName: '', timestamp: '' }
-            }).then(() => {
-                alert("數據已清空！");
-                location.reload();
-            }).catch((error) => {
-                console.error("清空數據失敗: ", error);
-            });
-        };
-
-        // 實時顯示最近 20 筆數據
-        function displayLatestData() {
-            const dataRef = ref(db, 'counts');
-            onValue(dataRef, (snapshot) => {
-                const data = snapshot.val();
-                let latestData = [];
-                for (let type in data) {
-                    if (data.hasOwnProperty(type)) {
-                        latestData.push({
-                            type: type,
-                            count: data[type].count || 0,
-                            visitorName: data[type].visitorName || "未知訪客",
-                            timestamp: data[type].timestamp || "無"
-                        });
-                    }
-                }
-                latestData = latestData.slice(-20).reverse();
-
-                const latestDataDiv = document.getElementById('latestData');
-                latestDataDiv.innerHTML = '';
-                latestData.forEach((entry, index) => {
-                    const dataElement = document.createElement('div');
-                    dataElement.innerHTML = `
-                        <p>${index + 1}. 訪客類型: ${entry.type} | 人數: ${entry.count} | 訪客名稱: ${entry.visitorName} | 時間: ${entry.timestamp} 
-                        <button onclick="confirmDelete('${entry.type}')">刪除</button></p>`;
-                    latestDataDiv.appendChild(dataElement);
+            if (confirm("確定要清空所有數據嗎？")) {
+                set(ref(db, 'counts'), {
+                    guestA: 0,
+                    guestB: 0,
+                    guestC: 0,
+                    guestD: 0,
+                    guestE: 0,
+                    guestF: 0,
+                    guestG: 0
                 });
-            });
-        }
-
-        // 刪除數據
-        window.confirmDelete = function (type) {
-            const confirmed = confirm("確定要刪除此數據嗎？");
-            if (confirmed) {
-                set(ref(db, 'counts/' + type), null)
-                    .then(() => {
-                        alert("數據已刪除！");
-                    })
-                    .catch((error) => {
-                        console.error("刪除數據失敗: ", error);
-                    });
             }
         };
 
-        // 登入驗證
-        window.login = function() {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            if (password === "1234") { // 密碼驗證（可以改為你設定的密碼）
-                document.getElementById("loginSection").style.display = "none";
-                document.getElementById("mainContent").style.display = "block";
-                displayLatestData();
-            } else {
-                alert("密碼錯誤！");
-            }
-        }
+        // 實時顯示最新 20 筆資料
+        onValue(ref(db, 'recent'), (snapshot) => {
+            const data = snapshot.val();
+            const keys = Object.keys(data || {}).slice(-20);
+            const recentList = document.getElementById('recentData');
+            recentList.innerHTML = '';
+            keys.forEach(key => {
+                const entry = data[key];
+                const div = document.createElement('div');
+                div.className = 'recentEntry';
+                div.textContent = `${entry.time} - ${entry.user} 訪客 ${entry.type}: ${entry.count}`;
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '刪除';
+                deleteBtn.onclick = function () {
+                    if (confirm("確定要刪除此紀錄嗎？")) {
+                        remove(ref(db, `recent/${key}`));
+                    }
+                };
+                div.appendChild(deleteBtn);
+                recentList.appendChild(div);
+            });
+        });
     </script>
 </head>
 <body>
-    <!-- 登入區域 -->
-    <div id="loginSection">
+    <div id="loginContainer">
         <h2>請登入以使用此系統</h2>
         <label for="username">使用者名稱：</label>
-        <input type="text" id="username" placeholder="請輸入使用者名稱"><br>
+        <input type="text" id="username" required>
+        <br>
         <label for="password">密碼：</label>
-        <input type="password" id="password" placeholder="請輸入密碼"><br>
+        <input type="password" id="password" required>
+        <br><br>
         <button onclick="login()">登入</button>
     </div>
 
-    <!-- 主內容區域 -->
-    <div id="mainContent">
+    <div id="appContainer">
         <h1>可愛風訪客統計</h1>
-        <label for="visitorName">輸入訪客名稱：</label>
-        <input type="text" id="visitorName" placeholder="請輸入訪客名稱"><br>
-
         <button onclick="increment('guestA')">訪客類型 A</button>
         <button onclick="increment('guestB')">訪客類型 B</button>
         <button onclick="increment('guestC')">訪客類型 C</button>
@@ -188,7 +183,7 @@
         <button onclick="increment('guestE')">訪客類型 E</button>
         <button onclick="increment('guestF')">訪客類型 F</button>
         <button onclick="increment('guestG')">訪客類型 G</button>
-
+        
         <div id="result">
             <div class="counter">訪客類型 A: <span id="countA">0</span></div>
             <div class="counter">訪客類型 B: <span id="countB">0</span></div>
@@ -198,11 +193,13 @@
             <div class="counter">訪客類型 F: <span id="countF">0</span></div>
             <div class="counter">訪客類型 G: <span id="countG">0</span></div>
         </div>
-
-        <div id="latestData"></div> <!-- 顯示最近 20 筆數據的區域 -->
-
-        <button id="export" onclick="exportData()">匯出統計資料</button>
+        
+        <button id="export" onclick="exportData()">匯出 Excel</button>
         <button id="clear" onclick="clearData()">清空數據</button>
+
+        <div id="recentData">
+            <h3>最近 20 筆紀錄</h3>
+        </div>
     </div>
 </body>
 </html>
