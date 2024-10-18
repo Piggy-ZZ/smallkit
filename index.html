@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可愛風訪客統計</title>
-    
+    <title>可愛風訪客統計</title> 
+
     <style>
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -150,16 +150,16 @@
         };
 
         // 登入驗證
-        function login() {
+        window.login = function() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            if (username === "admin" && password === "1234") {
+            if (password === "1234") { // 密碼驗證（可以改為你設定的密碼）
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("mainContent").style.display = "block";
                 displayLatestData();
             } else {
-                alert("使用者名稱或密碼錯誤！");
+                alert("密碼錯誤！");
             }
         }
     </script>
@@ -199,11 +199,10 @@
             <div class="counter">訪客類型 G: <span id="countG">0</span></div>
         </div>
 
+        <div id="latestData"></div> <!-- 顯示最近 20 筆數據的區域 -->
+
         <button id="export" onclick="exportData()">匯出統計資料</button>
         <button id="clear" onclick="clearData()">清空數據</button>
-
-        <h2>最近的 20 筆訪客資料</h2>
-        <div id="latestData"></div>
     </div>
 </body>
 </html>
