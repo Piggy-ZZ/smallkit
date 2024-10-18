@@ -1,81 +1,92 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可愛風訪客統計</title>
+    <meta charset="UTF-8"> <!-- 設定文件的字符編碼為 UTF-8，支援多語言字符集 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 設定網頁在不同設備上的顯示和縮放比例，特別適合移動設備 -->
+    <title>可愛風訪客統計</title> <!-- 定義網頁標題，顯示在瀏覽器標籤上 -->
+
     <style>
+        /* 設定整體網頁風格 */
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
-            background-color: #ffe4e1;
-            text-align: center;
+            font-family: 'Comic Sans MS', cursive, sans-serif; /* 字體樣式 */
+            background-color: #ffe4e1; /* 網頁背景顏色 */
+            text-align: center; /* 將所有內容置中 */
         }
 
+        /* 標題樣式 */
         h1 {
-            color: #ff69b4;
+            color: #ff69b4; /* 粉紅色標題字體 */
         }
 
+        /* 按鈕樣式 */
         button {
-            padding: 15px 30px;
-            font-size: 16px;
-            margin: 10px;
-            border: none;
-            border-radius: 20px;
-            background-color: #ffb6c1;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            padding: 15px 30px; /* 按鈕的內邊距 */
+            font-size: 16px; /* 按鈕字體大小 */
+            margin: 10px; /* 按鈕與其他元素之間的外邊距 */
+            border: none; /* 移除邊框 */
+            border-radius: 20px; /* 圓角邊框 */
+            background-color: #ffb6c1; /* 按鈕背景顏色 */
+            color: white; /* 字體顏色 */
+            cursor: pointer; /* 滑鼠移到按鈕上時顯示手指圖示 */
+            transition: background-color 0.3s ease; /* 背景顏色變化動畫 */
         }
 
+        /* 當滑鼠懸停時的按鈕效果 */
         button:hover {
-            background-color: #ff69b4;
+            background-color: #ff69b4; /* 懸停時的按鈕背景顏色 */
         }
 
+        /* 統計結果區域樣式 */
         #result {
-            margin-top: 20px;
-            font-size: 20px;
-            color: #ff69b4;
+            margin-top: 20px; /* 統計區域與上方元素的距離 */
+            font-size: 20px; /* 統計區域字體大小 */
+            color: #ff69b4; /* 統計字體顏色 */
         }
 
+        /* 計數區域樣式 */
         .counter {
-            padding: 10px;
-            background-color: #fff0f5;
-            border-radius: 10px;
-            margin: 5px;
+            padding: 10px; /* 計數區域內邊距 */
+            background-color: #fff0f5; /* 計數區域背景顏色 */
+            border-radius: 10px; /* 圓角邊框 */
+            margin: 5px; /* 與其他元素的距離 */
         }
 
+        /* 匯出按鈕樣式 */
         #export {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #ffa07a;
-            color: white;
-            border-radius: 15px;
-            cursor: pointer;
+            margin-top: 20px; /* 與上方元素的距離 */
+            padding: 10px 20px; /* 內邊距 */
+            background-color: #ffa07a; /* 按鈕背景顏色 */
+            color: white; /* 字體顏色 */
+            border-radius: 15px; /* 圓角按鈕 */
+            cursor: pointer; /* 滑鼠移動到此處時顯示手指圖示 */
         }
     </style>
 
     <!-- Firebase 配置 -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-    <script>
+    <script type="module">
+        // 引入 Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"; // 初始化 Firebase
+        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"; // 引入資料庫功能
+
         // Firebase 配置
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyCPKjaddCIeCecc49SR9srs5ijjbMMx1JI",
+            authDomain: "people-counting-1cae9.firebaseapp.com",
+            projectId: "people-counting-1cae9",
+            storageBucket: "people-counting-1cae9.appspot.com",
+            messagingSenderId: "521847124489",
+            appId: "1:521847124489:web:bd17765a151b60ccd97ed8",
+            databaseURL: "https://people-counting-1cae9-default-rtdb.firebaseio.com"
         };
 
         // 初始化 Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app); // 設置資料庫引用
 
-        // 實時監聽數據變化
-        db.ref('counts').on('value', (snapshot) => {
-            const data = snapshot.val();
+        // 實時監聽數據變化並更新顯示
+        onValue(ref(db, 'counts'), (snapshot) => {
+            const data = snapshot.val(); // 獲取 Firebase 中的數據
+            // 更新各個訪客類型的計數顯示
             document.getElementById('countA').textContent = data.guestA || 0;
             document.getElementById('countB').textContent = data.guestB || 0;
             document.getElementById('countC').textContent = data.guestC || 0;
@@ -87,17 +98,19 @@
 
         // 增加計數
         function increment(type) {
-            db.ref('counts/' + type).get().then((snapshot) => {
-                let count = snapshot.val() || 0;
-                count++;
-                db.ref('counts/' + type).set(count);
+            const countRef = ref(db, 'counts/' + type); // 設置資料庫的引用位置
+            get(countRef).then((snapshot) => {
+                let count = snapshot.val() || 0; // 獲取當前計數，若無數據則初始化為 0
+                count++; // 計數增加
+                set(countRef, count); // 將新計數值寫入資料庫
             });
         }
     </script>
 </head>
 <body>
-    <h1>可愛風訪客統計</h1>
+    <h1>可愛風訪客統計</h1> <!-- 網頁標題 -->
 
+    <!-- 各個訪客類型的按鈕，點擊按鈕後調用 increment 函數 -->
     <button onclick="increment('guestA')">訪客類型 A</button>
     <button onclick="increment('guestB')">訪客類型 B</button>
     <button onclick="increment('guestC')">訪客類型 C</button>
@@ -106,6 +119,7 @@
     <button onclick="increment('guestF')">訪客類型 F</button>
     <button onclick="increment('guestG')">訪客類型 G</button>
 
+    <!-- 顯示統計結果的區域 -->
     <div id="result">
         <div class="counter">訪客類型 A: <span id="countA">0</span></div>
         <div class="counter">訪客類型 B: <span id="countB">0</span></div>
@@ -116,13 +130,15 @@
         <div class="counter">訪客類型 G: <span id="countG">0</span></div>
     </div>
 
+    <!-- 匯出統計資料的按鈕 -->
     <button id="export" onclick="exportData()">匯出統計資料</button>
 
     <script>
         // 匯出統計資料為 CSV
         function exportData() {
-            db.ref('counts').get().then((snapshot) => {
-                const counts = snapshot.val();
+            get(ref(db, 'counts')).then((snapshot) => {
+                const counts = snapshot.val(); // 獲取所有計數資料
+                // 生成 CSV 文件內容
                 let csvContent = "data:text/csv;charset=utf-8,"
                     + "訪客類型,人數\n"
                     + "A," + (counts.guestA || 0) + "\n"
@@ -133,6 +149,7 @@
                     + "F," + (counts.guestF || 0) + "\n"
                     + "G," + (counts.guestG || 0) + "\n";
 
+                // 創建下載連結並自動觸發下載
                 var encodedUri = encodeURI(csvContent);
                 var link = document.createElement("a");
                 link.setAttribute("href", encodedUri);
