@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訪客統計</title>
+    <style>
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>訪客統計</h1>
+    
+    <button onclick="increment('guestA')">訪客類型 A</button>
+    <button onclick="increment('guestB')">訪客類型 B</button>
+    <button onclick="increment('guestC')">訪客類型 C</button>
+    <button onclick="increment('guestD')">訪客類型 D</button>
+    <button onclick="increment('guestE')">訪客類型 E</button>
+    <button onclick="increment('guestF')">訪客類型 F</button>
+    <button onclick="increment('guestG')">訪客類型 G</button>
+
+    <div id="result">
+        <p>訪客類型 A: <span id="countA">0</span></p>
+        <p>訪客類型 B: <span id="countB">0</span></p>
+        <p>訪客類型 C: <span id="countC">0</span></p>
+        <p>訪客類型 D: <span id="countD">0</span></p>
+        <p>訪客類型 E: <span id="countE">0</span></p>
+        <p>訪客類型 F: <span id="countF">0</span></p>
+        <p>訪客類型 G: <span id="countG">0</span></p>
+    </div>
+
+    <button onclick="exportData()">匯出統計資料</button>
+
+    <script>
+        // 初始化 LocalStorage 中的計數
+        let counts = {
+            guestA: localStorage.getItem('guestA') ? parseInt(localStorage.getItem('guestA')) : 0,
+            guestB: localStorage.getItem('guestB') ? parseInt(localStorage.getItem('guestB')) : 0,
+            guestC: localStorage.getItem('guestC') ? parseInt(localStorage.getItem('guestC')) : 0,
+            guestD: localStorage.getItem('guestD') ? parseInt(localStorage.getItem('guestD')) : 0,
+            guestE: localStorage.getItem('guestE') ? parseInt(localStorage.getItem('guestE')) : 0,
+            guestF: localStorage.getItem('guestF') ? parseInt(localStorage.getItem('guestF')) : 0,
+            guestG: localStorage.getItem('guestG') ? parseInt(localStorage.getItem('guestG')) : 0
+        };
+
+        // 顯示初始化的計數
+        function updateDisplay() {
+            document.getElementById('countA').textContent = counts.guestA;
+            document.getElementById('countB').textContent = counts.guestB;
+            document.getElementById('countC').textContent = counts.guestC;
+            document.getElementById('countD').textContent = counts.guestD;
+            document.getElementById('countE').textContent = counts.guestE;
+            document.getElementById('countF').textContent = counts.guestF;
+            document.getElementById('countG').textContent = counts.guestG;
+        }
+
+        // 每次按鈕點擊後，更新計數並儲存到 LocalStorage
+        function increment(type) {
+            counts[type]++;
+            localStorage.setItem(type, counts[type]);
+            updateDisplay();
+        }
+
+        updateDisplay();
+
+        // 匯出統計資料為 CSV
+        function exportData() {
+            let csvContent = "data:text/csv;charset=utf-8," 
+                            + "訪客類型,人數\n"
+                            + "A," + counts.guestA + "\n"
+                            + "B," + counts.guestB + "\n"
+                            + "C," + counts.guestC + "\n"
+                            + "D," + counts.guestD + "\n"
+                            + "E," + counts.guestE + "\n"
+                            + "F," + counts.guestF + "\n"
+                            + "G," + counts.guestG + "\n";
+
+            // 建立一個虛擬的下載連結
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "visitor_count.csv");
+            document.body.appendChild(link);
+
+            // 點擊下載連結
+            link.click();
+        }
+    </script>
+</body>
+</html>
