@@ -134,47 +134,28 @@
                 const timestamp = new Date().toLocaleString();
                 const newEntry = {
                     user: currentUserName,
-                    operation: `新增 ${type}`,
+                    type: type,
                     time: timestamp
                 };
                 push(ref(db, 'recent'), newEntry); // 將操作紀錄推送到 Firebase
             });
         };
 
-        // 匯出統計資料與操作紀錄
+        // 匯出統計資料，轉換為 Excel 格式
         window.exportData = function () {
-            Promise.all([
-                get(ref(db, 'counts')),
-                get(ref(db, 'recent'))
-            ]).then((snapshots) => {
-                const counts = snapshots[0].val();
-                const recent = snapshots[1].val();
+            get(ref(db, 'recent')).then((snapshot) => {
+                const data = snapshot.val();
+                const excelData = [["操作時間", "訪客類型", "操作使用者"]];
+                
+                Object.keys(data).forEach(key => {
+                    const entry = data[key];
+                    excelData.push([entry.time, entry.type, entry.user]);
+                });
 
-                // 準備資料
-                let exportData = [
-                    ["訪客類型", "人數"],
-                    ["A", counts.guestA || 0],
-                    ["B", counts.guestB || 0],
-                    ["C", counts.guestC || 0],
-                    ["D", counts.guestD || 0],
-                    ["E", counts.guestE || 0],
-                    ["F", counts.guestF || 0],
-                    ["G", counts.guestG || 0],
-                    [], // 空行分隔
-                    ["操作時間", "操作內容", "使用者"] // recent 操作記錄的標頭
-                ];
-
-                // 迭代 recent 資料
-                for (const timestamp in recent) {
-                    const record = recent[timestamp];
-                    exportData.push([record.time, record.operation, record.user]);
-                }
-
-                // 生成 Excel 檔案
-                const ws = XLSX.utils.aoa_to_sheet(exportData);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "訪客統計與操作記錄");
-                XLSX.writeFile(wb, "訪客統計與操作記錄.xlsx");
+                const ws = XLSX.utils.aoa_to_sheet(excelData); // 轉換數據為工作表格式
+                const wb = XLSX.utils.book_new(); // 創建一個新工作簿
+                XLSX.utils.book_append_sheet(wb, ws, "訪客操作紀錄"); // 將工作表添加到工作簿
+                XLSX.writeFile(wb, "visitor_record.xlsx"); // 將工作簿保存為 Excel 檔案
             });
         };
     </script>
