@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
@@ -90,7 +90,7 @@
 
         // 增加計數功能
         window.increment = function (type) {
-            const countRef = ref(db, 'counts/' + type);
+            const countRef = ref(db, `counts/${type}`);
             get(countRef).then((snapshot) => {
                 let count = snapshot.val() || 0;
                 count++;
@@ -168,38 +168,4 @@
         <label for="username">使用者名稱：</label>
         <input type="text" id="username" required>
         <br>
-        <label for="password">密碼：</label>
-        <input type="password" id="password" required>
-        <br><br>
-        <button onclick="login()">登入</button>
-    </div>
-
-    <div id="appContainer">
-        <h1>可愛風訪客統計</h1>
-        <button onclick="increment('guestA')">訪客類型 A</button>
-        <button onclick="increment('guestB')">訪客類型 B</button>
-        <button onclick="increment('guestC')">訪客類型 C</button>
-        <button onclick="increment('guestD')">訪客類型 D</button>
-        <button onclick="increment('guestE')">訪客類型 E</button>
-        <button onclick="increment('guestF')">訪客類型 F</button>
-        <button onclick="increment('guestG')">訪客類型 G</button>
-        
-        <div id="result">
-            <div class="counter">訪客類型 A: <span id="countA">0</span></div>
-            <div class="counter">訪客類型 B: <span id="countB">0</span></div>
-            <div class="counter">訪客類型 C: <span id="countC">0</span></div>
-            <div class="counter">訪客類型 D: <span id="countD">0</span></div>
-            <div class="counter">訪客類型 E: <span id="countE">0</span></div>
-            <div class="counter">訪客類型 F: <span id="countF">0</span></div>
-            <div class="counter">訪客類型 G: <span id="countG">0</span></div>
-        </div>
-        
-        <button id="export" onclick="exportData()">匯出 Excel</button>
-        <button id="clear" onclick="clearData()">清空數據</button>
-
-        <div id="recentData">
-            <h3>最近 20 筆紀錄</h3>
-        </div>
-    </div>
-</body>
-</html>
+    
