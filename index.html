@@ -71,6 +71,9 @@
     </style>
 
     <script>
+        // 全局變量保存當前登入用戶名
+        let currentUserName = "";
+
         // 假設的用戶名稱和密碼
         const validPassword = "123456";
 
@@ -79,6 +82,7 @@
             const password = document.getElementById('password').value;
 
             if (password === validPassword) {
+                currentUserName = username; // 記錄登入用戶
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
             } else {
@@ -90,7 +94,7 @@
     <!-- Firebase 配置 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"; 
-        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"; 
+        import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"; 
 
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -105,6 +109,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // 實時更新訪客計數顯示
         onValue(ref(db, 'counts'), (snapshot) => {
             const data = snapshot.val();
             document.getElementById('countA').textContent = data.guestA || 0;
@@ -116,15 +121,26 @@
             document.getElementById('countG').textContent = data.guestG || 0;
         });
 
+        // 增加訪客類型計數並保存操作紀錄
         window.increment = function (type) {
             const countRef = ref(db, 'counts/' + type);
             get(countRef).then((snapshot) => {
                 let count = snapshot.val() || 0;
                 count++;
                 set(countRef, count);
+
+                // 紀錄操作到 recent 節點
+                const timestamp = new Date().toLocaleString();
+                const newEntry = {
+                    user: currentUserName,
+                    type: type,
+                    time: timestamp
+                };
+                push(ref(db, 'recent'), newEntry); // 將操作紀錄推送到 Firebase
             });
         };
 
+        // 匯出統計資料
         window.exportData = function () {
             get(ref(db, 'counts')).then((snapshot) => {
                 const counts = snapshot.val();
@@ -162,9 +178,11 @@
         <button onclick="login()">登入</button>
     </div>
 
-    <!-- 主頁面，僅在登入成功後顯示 -->
+    <!-- 主頁面 -->
     <div id="appContainer">
         <h1>可愛風訪客統計</h1>
+
+        <!-- 各個訪客類型的按鈕 -->
         <button onclick="increment('guestA')">訪客類型 A</button>
         <button onclick="increment('guestB')">訪客類型 B</button>
         <button onclick="increment('guestC')">訪客類型 C</button>
@@ -172,7 +190,8 @@
         <button onclick="increment('guestE')">訪客類型 E</button>
         <button onclick="increment('guestF')">訪客類型 F</button>
         <button onclick="increment('guestG')">訪客類型 G</button>
-        
+
+        <!-- 統計結果顯示區域 -->
         <div id="result">
             <div class="counter">訪客類型 A: <span id="countA">0</span></div>
             <div class="counter">訪客類型 B: <span id="countB">0</span></div>
@@ -182,8 +201,10 @@
             <div class="counter">訪客類型 F: <span id="countF">0</span></div>
             <div class="counter">訪客類型 G: <span id="countG">0</span></div>
         </div>
-        
+
+        <!-- 匯出統計資料按鈕 -->
         <button id="export" onclick="exportData()">匯出統計資料</button>
     </div>
+
 </body>
 </html>
