@@ -45,7 +45,7 @@
             margin: 5px;
         }
 
-        #export {
+        #export, #clearData {
             margin-top: 20px;
             padding: 10px 20px;
             background-color: #ffa07a;
@@ -63,10 +63,8 @@
         }
     </style>
 
-    <!-- 導入 Firebase 和 XLSX 庫 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-
     <script>
+        // 全局變量保存當前登入用戶名
         let currentUserName = "";
         const validPassword = "123456";
 
@@ -75,7 +73,7 @@
             const password = document.getElementById('password').value;
 
             if (password === validPassword) {
-                currentUserName = username;
+                currentUserName = username; // 記錄登入用戶
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
             } else {
@@ -87,7 +85,8 @@
     <!-- Firebase 配置 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+        import { getDatabase, ref, get, set, remove, onValue, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+        import * as XLSX from "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js";
 
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -102,6 +101,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // 實時更新訪客計數顯示
         onValue(ref(db, 'counts'), (snapshot) => {
             const data = snapshot.val();
             document.getElementById('countA').textContent = data.guestA || 0;
@@ -113,6 +113,7 @@
             document.getElementById('countG').textContent = data.guestG || 0;
         });
 
+        // 增加訪客類型計數並保存操作紀錄
         window.increment = function (type) {
             const countRef = ref(db, 'counts/' + type);
             get(countRef).then((snapshot) => {
@@ -146,6 +147,34 @@
                 XLSX.utils.book_append_sheet(wb, ws, "訪客操作紀錄");
                 XLSX.writeFile(wb, "visitor_record.xlsx");
             });
+        };
+
+        // 清空數據並記錄清空操作
+        window.clearData = function () {
+            const confirmation = confirm("您確定要清空所有數據嗎？此操作無法恢復。");
+            if (confirmation) {
+                // 清空 counts 數據
+                set(ref(db, 'counts'), {
+                    guestA: 0,
+                    guestB: 0,
+                    guestC: 0,
+                    guestD: 0,
+                    guestE: 0,
+                    guestF: 0,
+                    guestG: 0
+                });
+
+                // 紀錄清空操作到 recent 節點
+                const timestamp = new Date().toLocaleString();
+                const clearEntry = {
+                    user: currentUserName,
+                    type: "清空數據",
+                    time: timestamp
+                };
+                push(ref(db, 'recent'), clearEntry);
+
+                alert("數據已被清空。");
+            }
         };
     </script>
 </head>
@@ -189,6 +218,9 @@
 
         <!-- 匯出統計資料按鈕 -->
         <button id="export" onclick="exportData()">匯出統計資料</button>
+
+        <!-- 清空數據按鈕 -->
+        <button id="clearData" onclick="clearData()">清空數據</button>
     </div>
 
 </body>
