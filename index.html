@@ -174,9 +174,9 @@
             });
         };
 
-        // 清空數據並封存操作
+        // 清空數據並封存操作，無提示框
         window.clearData = function () {
-            // 將當前 counts 數據封存到 archive（無需提示框）
+            // 將當前 counts 數據封存到 archive
             get(ref(db, 'counts')).then((snapshot) => {
                 const currentData = snapshot.val();
                 const timestamp = new Date().toLocaleString();
@@ -236,7 +236,7 @@
             });
         }
 
-        // 刪除指定資料，並將其封存到 archive
+        // 刪除指定資料，並將其封存到 archive，記錄刪除者資訊
         window.deleteEntry = function (key) {
             const confirmation = confirm("您確定要刪除此資料嗎？此操作無法恢復。");
             if (confirmation) {
