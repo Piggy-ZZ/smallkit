@@ -1,64 +1,57 @@
 <!DOCTYPE html> 
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8"> <!-- 設定文件的字符編碼為 UTF-8，支援多語言字符集 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 設定網頁在不同設備上的顯示和縮放比例，特別適合移動設備 -->
-    <title>可愛風訪客統計</title> <!-- 定義網頁標題，顯示在瀏覽器標籤上 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛風訪客統計</title>
 
     <style>
-        /* 設定整體網頁風格 */
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif; /* 字體樣式 */
-            background-color: #ffe4e1; /* 網頁背景顏色 */
-            text-align: center; /* 將所有內容置中 */
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #ffe4e1;
+            text-align: center;
         }
 
-        /* 標題樣式 */
         h1 {
-            color: #ff69b4; /* 粉紅色標題字體 */
+            color: #ff69b4;
         }
 
-        /* 按鈕樣式 */
         button {
-            padding: 15px 30px; /* 按鈕的內邊距 */
-            font-size: 16px; /* 按鈕字體大小 */
-            margin: 10px; /* 按鈕與其他元素之間的外邊距 */
-            border: none; /* 移除邊框 */
-            border-radius: 20px; /* 圓角邊框 */
-            background-color: #ffb6c1; /* 按鈕背景顏色 */
-            color: white; /* 字體顏色 */
-            cursor: pointer; /* 滑鼠移到按鈕上時顯示手指圖示 */
-            transition: background-color 0.3s ease; /* 背景顏色變化動畫 */
+            padding: 15px 30px;
+            font-size: 16px;
+            margin: 10px;
+            border: none;
+            border-radius: 20px;
+            background-color: #ffb6c1;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
-        /* 當滑鼠懸停時的按鈕效果 */
         button:hover {
-            background-color: #ff69b4; /* 懸停時的按鈕背景顏色 */
+            background-color: #ff69b4;
         }
 
-        /* 統計結果區域樣式 */
         #result {
-            margin-top: 20px; /* 統計區域與上方元素的距離 */
-            font-size: 20px; /* 統計區域字體大小 */
-            color: #ff69b4; /* 統計字體顏色 */
+            margin-top: 20px;
+            font-size: 20px;
+            color: #ff69b4;
         }
 
-        /* 計數區域樣式 */
         .counter {
-            padding: 10px; /* 計數區域內邊距 */
-            background-color: #fff0f5; /* 計數區域背景顏色 */
-            border-radius: 10px; /* 圓角邊框 */
-            margin: 5px; /* 與其他元素的距離 */
+            padding: 10px;
+            background-color: #fff0f5;
+            border-radius: 10px;
+            margin: 5px;
         }
 
-        /* 匯出按鈕樣式 */
         #export {
-            margin-top: 20px; /* 與上方元素的距離 */
-            padding: 10px 20px; /* 內邊距 */
-            background-color: #ffa07a; /* 按鈕背景顏色 */
-            color: white; /* 字體顏色 */
-            border-radius: 15px; /* 圓角按鈕 */
-            cursor: pointer; /* 滑鼠移動到此處時顯示手指圖示 */
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ffa07a;
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
         }
 
         #loginContainer {
@@ -70,11 +63,11 @@
         }
     </style>
 
-    <script>
-        // 全局變量保存當前登入用戶名
-        let currentUserName = "";
+    <!-- 導入 Firebase 和 XLSX 庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
-        // 假設的用戶名稱和密碼
+    <script>
+        let currentUserName = "";
         const validPassword = "123456";
 
         function login() {
@@ -82,7 +75,7 @@
             const password = document.getElementById('password').value;
 
             if (password === validPassword) {
-                currentUserName = username; // 記錄登入用戶
+                currentUserName = username;
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
             } else {
@@ -93,9 +86,8 @@
 
     <!-- Firebase 配置 -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"; 
-        import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"; 
-        import * as XLSX from "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getDatabase, ref, get, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -110,7 +102,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 實時更新訪客計數顯示
         onValue(ref(db, 'counts'), (snapshot) => {
             const data = snapshot.val();
             document.getElementById('countA').textContent = data.guestA || 0;
@@ -122,7 +113,6 @@
             document.getElementById('countG').textContent = data.guestG || 0;
         });
 
-        // 增加訪客類型計數並保存操作紀錄
         window.increment = function (type) {
             const countRef = ref(db, 'counts/' + type);
             get(countRef).then((snapshot) => {
@@ -130,14 +120,13 @@
                 count++;
                 set(countRef, count);
 
-                // 紀錄操作到 recent 節點
                 const timestamp = new Date().toLocaleString();
                 const newEntry = {
                     user: currentUserName,
                     type: type,
                     time: timestamp
                 };
-                push(ref(db, 'recent'), newEntry); // 將操作紀錄推送到 Firebase
+                push(ref(db, 'recent'), newEntry);
             });
         };
 
@@ -152,10 +141,10 @@
                     excelData.push([entry.time, entry.type, entry.user]);
                 });
 
-                const ws = XLSX.utils.aoa_to_sheet(excelData); // 轉換數據為工作表格式
-                const wb = XLSX.utils.book_new(); // 創建一個新工作簿
-                XLSX.utils.book_append_sheet(wb, ws, "訪客操作紀錄"); // 將工作表添加到工作簿
-                XLSX.writeFile(wb, "visitor_record.xlsx"); // 將工作簿保存為 Excel 檔案
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "訪客操作紀錄");
+                XLSX.writeFile(wb, "visitor_record.xlsx");
             });
         };
     </script>
