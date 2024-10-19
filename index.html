@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>   
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
@@ -233,7 +233,7 @@
                             <p>時間: ${entry.time}</p>
                             <p>操作使用者: ${entry.user}</p>
                             <p>操作項目: ${entry.type}</p>
-                            <button class="deleteBtn" onclick="deleteEntry('${key}')">刪除</button>
+                            <button class="deleteBtn" onclick="deleteEntry('${key}', '${entry.type}')">刪除</button>
                         `;
                         recentEntriesDiv.appendChild(entryDiv);
                     }
@@ -242,7 +242,7 @@
         }
 
         // 刪除指定資料，並將其封存到 archive
-        window.deleteEntry = function (key) {
+        window.deleteEntry = function (key, type) {
             const confirmation = confirm("您確定要刪除此資料嗎？此操作無法恢復。");
             if (confirmation) {
                 get(ref(db, 'recent/' + key)).then((snapshot) => {
@@ -256,6 +256,14 @@
                         deletedBy: currentUserName // 記錄刪除者資訊
                     };
                     push(ref(db, 'archive'), archiveEntry); // 將刪除資料封存到 archive
+
+                    // 同步更新 counts 數據，對應的訪客類型減 1
+                    const countRef = ref(db, 'counts/' + type);
+                    get(countRef).then((countSnapshot) => {
+                        let count = countSnapshot.val() || 0;
+                        count = count > 0 ? count - 1 : 0; // 確保 count 不會小於 0
+                        set(countRef, count);
+                    });
                 });
 
                 remove(ref(db, 'recent/' + key)).then(() => {
