@@ -1,4 +1,4 @@
-<!DOCTYPE html>   
+<!DOCTYPE html>  
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
@@ -62,7 +62,6 @@
             display: none;
         }
 
-        /* 最近 20 筆資料樣式 */
         .entry {
             margin: 10px;
             padding: 10px;
@@ -177,7 +176,7 @@
 
         // 清空數據並封存操作
         window.clearData = function () {
-            // 將當前 counts 數據封存到 archive，無需提示框
+            // 將當前 counts 數據封存到 archive（無需提示框）
             get(ref(db, 'counts')).then((snapshot) => {
                 const currentData = snapshot.val();
                 const timestamp = new Date().toLocaleString();
@@ -241,7 +240,6 @@
         window.deleteEntry = function (key) {
             const confirmation = confirm("您確定要刪除此資料嗎？此操作無法恢復。");
             if (confirmation) {
-                // 取得指定資料
                 get(ref(db, 'recent/' + key)).then((snapshot) => {
                     const entry = snapshot.val();
                     const timestamp = new Date().toLocaleString();
@@ -250,7 +248,7 @@
                         time: entry.time,
                         action: entry.type,
                         deletedAt: timestamp,
-                        deletedBy: currentUserName // 將刪除者記錄進封存數據
+                        deletedBy: currentUserName // 記錄刪除者資訊
                     };
                     push(ref(db, 'archive'), archiveEntry); // 將刪除資料封存到 archive
                 });
