@@ -163,7 +163,9 @@
                 
                 Object.keys(data).forEach(key => {
                     const entry = data[key];
-                    excelData.push([entry.time, entry.type, entry.user]);
+                    if (entry.type !== "清空數據") { // 不匯出清空數據前的封存資料
+                        excelData.push([entry.time, entry.type, entry.user]);
+                    }
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(excelData);
@@ -173,10 +175,23 @@
             });
         };
 
-        // 清空數據並記錄操作
+        // 清空數據並封存操作
         window.clearData = function () {
             const confirmation = confirm("您確定要清空所有數據嗎？此操作無法恢復。");
             if (confirmation) {
+                // 將當前 counts 數據封存到 archive
+                get(ref(db, 'counts')).then((snapshot) => {
+                    const currentData = snapshot.val();
+                    const timestamp = new Date().toLocaleString();
+                    const archiveEntry = {
+                        user: currentUserName,
+                        time: timestamp,
+                        data: currentData
+                    };
+                    push(ref(db, 'archive'), archiveEntry); // 將封存數據推送到 archive
+                });
+
+                // 清空 counts 節點數據
                 set(ref(db, 'counts'), {
                     guestA: 0,
                     guestB: 0,
@@ -187,6 +202,7 @@
                     guestG: 0
                 });
 
+                // 記錄清空操作
                 const timestamp = new Date().toLocaleString();
                 const clearEntry = {
                     user: currentUserName,
@@ -195,39 +211,56 @@
                 };
                 push(ref(db, 'recent'), clearEntry);
 
-                alert("數據已被清空。");
+                alert("數據已被清空並封存。");
                 loadRecentEntries(); // 更新最近操作列表
             }
         };
 
-        // 加載最近 20 筆資料
-        window.loadRecentEntries = function () {
-            const recentQuery = query(ref(db, 'recent'), limitToLast(20)); // 加載最近 20 筆
-            get(recentQuery).then((snapshot) => {
-                const data = snapshot.val();
-                const recentContainer = document.getElementById('recentEntries');
-                recentContainer.innerHTML = ''; // 清空現有資料
-                Object.keys(data).reverse().forEach(key => {
-                    const entry = data[key];
-                    const entryDiv = document.createElement('div');
-                    entryDiv.classList.add('entry');
-                    entryDiv.innerHTML = `
-                        <div>操作時間: ${entry.time}</div>
-                        <div>訪客類型: ${entry.type}</div>
-                        <div>操作使用者: ${entry.user}</div>
-                        <button class="deleteBtn" onclick="deleteEntry('${key}')">刪除</button>
-                    `;
-                    recentContainer.appendChild(entryDiv);
+        // 加載最近 20 筆資料，不包括清空操作
+        function loadRecentEntries() {
+            const recentRef = query(ref(db, 'recent'), limitToLast(20)); // 獲取最近 20 筆資料
+            get(recentRef).then((snapshot) => {
+                const recentData = snapshot.val();
+                const recentEntriesDiv = document.getElementById('recentEntries');
+                recentEntriesDiv.innerHTML = ''; // 清空現有內容
+
+                Object.keys(recentData).reverse().forEach(key => { // 倒序顯示
+                    const entry = recentData[key];
+                    if (entry.type !== "清空數據") { // 不顯示清空數據的紀錄
+                        const entryDiv = document.createElement('div');
+                        entryDiv.classList.add('entry');
+                        entryDiv.innerHTML = `
+                            <p>時間: ${entry.time}</p>
+                            <p>操作使用者: ${entry.user}</p>
+                            <p>操作項目: ${entry.type}</p>
+                            <button class="deleteBtn" onclick="deleteEntry('${key}')">刪除</button>
+                        `;
+                        recentEntriesDiv.appendChild(entryDiv);
+                    }
                 });
             });
-        };
+        }
 
-        // 刪除指定資料
+        // 刪除指定資料，並將其封存到 archive
         window.deleteEntry = function (key) {
-            const confirmation = confirm("您確定要刪除此項記錄嗎？");
+            const confirmation = confirm("您確定要刪除此資料嗎？此操作無法恢復。");
             if (confirmation) {
-                remove(ref(db, 'recent/' + key)); // 從數據庫刪除
-                loadRecentEntries(); // 重新加載資料，刪除後更新前端
+                get(ref(db, 'recent/' + key)).then((snapshot) => {
+                    const entry = snapshot.val();
+                    const timestamp = new Date().toLocaleString();
+                    const archiveEntry = {
+                        user: entry.user,
+                        time: entry.time,
+                        action: entry.type,
+                        deletedAt: timestamp
+                    };
+                    push(ref(db, 'archive'), archiveEntry); // 將刪除資料封存到 archive
+                });
+
+                remove(ref(db, 'recent/' + key)).then(() => {
+                    alert("資料已被刪除並封存。");
+                    loadRecentEntries(); // 刪除後刷新最近列表
+                });
             }
         };
     </script>
