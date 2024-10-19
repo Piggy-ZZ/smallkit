@@ -176,41 +176,44 @@
 
         // 清空數據並封存 recent 中的所有操作，然後清空 recent 和 counts
         window.clearData = function () {
-            // 取得並封存 `recent` 中的所有操作到 `archive`
-            get(ref(db, 'recent')).then((snapshot) => {
-                const recentData = snapshot.val();
-                const timestamp = new Date().toLocaleString();
-                const archiveEntry = {
-                    user: currentUserName,
-                    time: timestamp,
-                    data: recentData
-                };
-                push(ref(db, 'archive'), archiveEntry); // 將封存數據推送到 archive
+            const confirmation = confirm("您確定要清空所有數據嗎？此操作無法恢復。");
+            if (confirmation) {
+                // 取得並封存 `recent` 中的所有操作到 `archive`
+                get(ref(db, 'recent')).then((snapshot) => {
+                    const recentData = snapshot.val();
+                    const timestamp = new Date().toLocaleString();
+                    const archiveEntry = {
+                        user: currentUserName,
+                        time: timestamp,
+                        data: recentData
+                    };
+                    push(ref(db, 'archive'), archiveEntry); // 將封存數據推送到 archive
 
-                // 清空 `recent` 節點
-                set(ref(db, 'recent'), null);
+                    // 清空 `recent` 節點
+                    set(ref(db, 'recent'), null);
 
-                // 清空 counts 節點數據
-                set(ref(db, 'counts'), {
-                    guestA: 0,
-                    guestB: 0,
-                    guestC: 0,
-                    guestD: 0,
-                    guestE: 0,
-                    guestF: 0,
-                    guestG: 0
+                    // 清空 counts 節點數據
+                    set(ref(db, 'counts'), {
+                        guestA: 0,
+                        guestB: 0,
+                        guestC: 0,
+                        guestD: 0,
+                        guestE: 0,
+                        guestF: 0,
+                        guestG: 0
+                    });
+
+                    // 記錄清空操作
+                    const clearEntry = {
+                        user: currentUserName,
+                        type: "清空數據",
+                        time: timestamp
+                    };
+                    push(ref(db, 'recent'), clearEntry);
+
+                    loadRecentEntries(); // 更新最近操作列表
                 });
-
-                // 記錄清空操作
-                const clearEntry = {
-                    user: currentUserName,
-                    type: "清空數據",
-                    time: timestamp
-                };
-                push(ref(db, 'recent'), clearEntry);
-
-                loadRecentEntries(); // 更新最近操作列表
-            });
+            }
         };
 
         // 加載最近 20 筆資料，不包括清空操作
