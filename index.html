@@ -1,18 +1,24 @@
-<!DOCTYPE html>   
-<html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh">
+
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>創新嘉年華人數統計</title>
 
     <style>
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-family: 'Noto Sans TC', sans-serif;
             background-color: #ffe4e1;
             text-align: center;
         }
 
         h1 {
+            color: #ff69b4;
+        }
+
+        h2 {
             color: #ff69b4;
         }
 
@@ -56,6 +62,30 @@
 
         #loginContainer {
             margin-top: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        label {
+            font-size: 22px;
+            /* 調整字體大小 */
+            margin-bottom: 10px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 300px;
+            /* 調整輸入框寬度 */
+            padding: 10px;
+            /* 調整內邊距讓框變大 */
+            font-size: 18px;
+            /* 調整字體大小 */
+            margin-bottom: 20px;
+            /* 調整框與框之間的間距 */
+            border-radius: 10px;
+            border: 1px solid #ccc;
         }
 
         #appContainer {
@@ -103,6 +133,12 @@
                 alert('密碼錯誤，請重試。');
             }
         }
+        // 監聽鍵盤事件，當按下 Enter 鍵時執行 login 函數
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                login(); // 如果按下的是 Enter 鍵，調用 login 函數
+            }
+        });
     </script>
 
     <!-- Firebase 配置 -->
@@ -126,13 +162,11 @@
         // 監聽訪客數據變化
         onValue(ref(db, 'counts'), (snapshot) => {
             const data = snapshot.val();
-            document.getElementById('countA').textContent = data.guestA || 0;
-            document.getElementById('countB').textContent = data.guestB || 0;
-            document.getElementById('countC').textContent = data.guestC || 0;
-            document.getElementById('countD').textContent = data.guestD || 0;
-            document.getElementById('countE').textContent = data.guestE || 0;
-            document.getElementById('countF').textContent = data.guestF || 0;
-            document.getElementById('countG').textContent = data.guestG || 0;
+            document.getElementById('countA').textContent = data['追蹤領🎁'] || 0;
+            document.getElementById('countB').textContent = data['廠商合作'] || 0;
+            document.getElementById('countC').textContent = data['體驗AIKM'] || 0;
+            document.getElementById('countD').textContent = data['客戶詢價'] || 0;
+            document.getElementById('countE').textContent = data['求職人才'] || 0;
         });
 
         // 增加訪客類型並記錄操作
@@ -159,7 +193,7 @@
             get(ref(db, 'recent')).then((snapshot) => {
                 const data = snapshot.val();
                 const excelData = [["操作時間", "訪客類型", "操作使用者"]];
-                
+
                 Object.keys(data).forEach(key => {
                     const entry = data[key];
                     if (entry.type !== "清空數據") { // 不匯出清空數據前的封存資料
@@ -194,13 +228,11 @@
 
                     // 清空 counts 節點數據
                     set(ref(db, 'counts'), {
-                        guestA: 0,
-                        guestB: 0,
-                        guestC: 0,
-                        guestD: 0,
-                        guestE: 0,
-                        guestF: 0,
-                        guestG: 0
+                        '追蹤領🎁': 0,
+                        '廠商合作': 0,
+                        '體驗AIKM': 0,
+                        '客戶詢價': 0,
+                        '求職人才': 0,
                     });
 
                     // 記錄清空操作
@@ -273,15 +305,16 @@
         };
     </script>
 </head>
+
 <body>
 
     <!-- 登入頁面 -->
     <div id="loginContainer">
-        <h2>登入以使用</h2>
-        <label for="username">使用者名稱：</label>
+        <h1>登入以使用</h1>
+        <label for="username">使用者</label>
         <input type="text" id="username" required>
         <br>
-        <label for="password">密碼：</label>
+        <label for="password">密碼</label>
         <input type="password" id="password" required>
         <br><br>
         <button onclick="login()">登入</button>
@@ -292,23 +325,19 @@
         <h1>創新嘉年華人數統計</h1>
 
         <!-- 各個訪客類型的按鈕 -->
-        <button onclick="increment('guestA')">訪客類型 A</button>
-        <button onclick="increment('guestB')">訪客類型 B</button>
-        <button onclick="increment('guestC')">訪客類型 C</button>
-        <button onclick="increment('guestD')">訪客類型 D</button>
-        <button onclick="increment('guestE')">訪客類型 E</button>
-        <button onclick="increment('guestF')">訪客類型 F</button>
-        <button onclick="increment('guestG')">訪客類型 G</button>
+        <button onclick="increment('追蹤領🎁')">追蹤領🎁</button>
+        <button onclick="increment('廠商合作')">廠商合作</button>
+        <button onclick="increment('體驗AIKM')">體驗AIKM</button>
+        <button onclick="increment('客戶詢價')">客戶詢價</button>
+        <button onclick="increment('求職人才')">求職人才</button>
 
         <!-- 統計結果顯示區域 -->
         <div id="result">
-            <div class="counter">訪客類型 A: <span id="countA">0</span></div>
-            <div class="counter">訪客類型 B: <span id="countB">0</span></div>
-            <div class="counter">訪客類型 C: <span id="countC">0</span></div>
-            <div class="counter">訪客類型 D: <span id="countD">0</span></div>
-            <div class="counter">訪客類型 E: <span id="countE">0</span></div>
-            <div class="counter">訪客類型 F: <span id="countF">0</span></div>
-            <div class="counter">訪客類型 G: <span id="countG">0</span></div>
+            <div class="counter">追蹤領🎁: <span id="countA">0</span></div>
+            <div class="counter">廠商合作: <span id="countB">0</span></div>
+            <div class="counter">體驗AIKM: <span id="countC">0</span></div>
+            <div class="counter">客戶詢價: <span id="countD">0</span></div>
+            <div class="counter">求職人才: <span id="countE">0</span></div>
         </div>
 
         <!-- 匯出統計資料按鈕 -->
@@ -323,4 +352,5 @@
     </div>
 
 </body>
+
 </html>
